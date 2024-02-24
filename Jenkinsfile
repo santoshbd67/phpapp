@@ -1,32 +1,22 @@
 pipeline {
     agent any
     environment {
-        AWS_ACCOUNT_ID="159012065560"
-        AWS_DEFAULT_REGION="us-east-1"
-        IMAGE_REPO_NAME="phpapplication"
+        AWS_DEFAULT_REGION="us-east-1" 
+        IMAGE_REPO_NAME="phpapppubapp"
         IMAGE_TAG="latest"
-        AWS_CREDENTIALS_ID ="aws_id"
-        JENKINS_CREDENTIALS_ID ="ssh_cred"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
-        EC2_INSTANCE_IP = '54.152.22.213'  // Replace with your EC2 instance's IP or DNS
-        DEPLOY_SCRIPT = "deploy_script.sh"   
+        AWS_ACCESS_KEY_ID     = credentials('accesskey')
+        AWS_SECRET_ACCESS_KEY = credentials('secretkey')
     }
-
+    
     stages {
-        stage('Logging into AWS ECR') {
-            steps {
-                script {
-                    sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
-                }
-            }
-        }
-
         stage('Cloning Git') {
             steps {
-                git branch: 'main', url: 'https://github.com/santoshbd67/phpapp.git'
+                git branch: 'main', url: 'https://github.com/santoshbd67/phpapp.git' 
             }
         }
-
+        
+        // Building Docker images
         stage('Building image') {
             steps {
                 script {
@@ -35,30 +25,26 @@ pipeline {
             }
         }
 
-        stage('Pushing to ECR') {
+        // Uploading Docker images into AWS ECR
+        stage('Push to ECR') {
             steps {
                 script {
-                    sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:${IMAGE_TAG}"
-                    sh "docker push ${REPOSITORY_URI}:${IMAGE_TAG}"
+                    // Build Docker image locally
+                    def dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+
+                    // Debug statement
+                    echo "Docker image built: ${dockerImage}"
+
+                    // Tag the Docker image
+                    sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} public.ecr.aws/b1u8y4d2/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+
+                    // Debug statement
+                    sh "docker images" // Check images after tagging
+
+                    // Push the Docker image to ECR
+                    sh "docker push public.ecr.aws/b1u8y4d2/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
                 }
             }
         }
-
-  stage('Deploying to EC2') {
-            steps {
-                script {
-                    withCredentials([sshUserPrivateKey(credentialsId: JENKINS_CREDENTIALS_ID, keyFileVariable: 'SSH_KEY')]) {
-                        // Copy the deploy script to the remote server
-                        sh "echo '''${DEPLOY_SCRIPT}''' > deploy_script.sh"
-                        sh "scp -o StrictHostKeyChecking=no -i ${SSH_KEY} deploy_script.sh ubuntu@${EC2_INSTANCE_IP}:~/"
-
-                        // Execute the deploy script on the remote server
-                       sh "ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ubuntu@${EC2_INSTANCE_IP} 'bash -s' < deploy_script.sh"
-
-                    }
-                }
-            }
-        }
-
     }
 }
