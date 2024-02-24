@@ -1,37 +1,47 @@
 pipeline {
     agent any
-
     environment {
-        // AWS credentials configured in Jenkins Credentials
-        AWS_ACCESS_KEY_ID     = credentials('access_id')
-        AWS_SECRET_ACCESS_KEY = credentials('secret_id')
-        AWS_REGION            = 'us-east-1'
-        ECR_REGISTRY          = 'public.ecr.aws/t0x2d0e3/phpapp'
-        IMAGE_NAME            = 'phpwebapp'
+        AWS_ACCOUNT_ID="159012065560"
+        AWS_DEFAULT_REGION="us-east-1"
+        IMAGE_REPO_NAME="phpapplication"
+        IMAGE_TAG="latest"
+        REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
     }
-
+   
     stages {
-        stage('Checkout') {
-            steps {
-              git branch: 'main', url: 'https://github.com/santoshbd67/phpapp.git'
-            }
-        }
-
-        stage('Build and Push Docker Image') {
+        
+         stage('Logging into AWS ECR') {
             steps {
                 script {
-                    // Authenticate with AWS ECR
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', credentialsId: 'your-aws-credentials-id']]) {
-                        docker.withRegistry(ECR_REGISTRY, 'ecr') {
-                            // Build Docker image
-                            def customImage = docker.build("${ECR_REGISTRY}/${IMAGE_NAME}:${env.BUILD_ID}")
-
-                            // Push Docker image to AWS ECR
-                            customImage.push()
-                        }
-                    }
+                sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
                 }
+                 
             }
         }
+        
+        stage('Cloning Git') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/sd031/aws_codebuild_codedeploy_nodeJs_demo.git']]])     
+            }
+        }
+  
+    // Building Docker images
+    stage('Building image') {
+      steps{
+        script {
+          dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+        }
+      }
+    }
+   
+    // Uploading Docker images into AWS ECR
+    stage('Pushing to ECR') {
+     steps{  
+         script {
+                sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG"
+                sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+         }
+        }
+      }
     }
 }
