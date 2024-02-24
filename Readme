@@ -1,0 +1,2 @@
+docker run -p 8080:80 -e RDS_HOSTNAME=your-rds-endpoint -e RDS_DB_NAME=your-database-name -e RDS_USERNAME=your-database-user -e RDS_PASSWORD=your-database-password php-docker-rds
+
