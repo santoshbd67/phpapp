@@ -59,7 +59,8 @@ pipeline {
                         sh "scp -o StrictHostKeyChecking=no -i ${SSH_KEY} deploy_script.sh ubuntu@${EC2_INSTANCE_IP}:~/"
 
                         // Execute the deploy script on the remote server
-                        sh "ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ubuntu@${EC2_INSTANCE_IP} 'bash -s' < ~/deploy_script.sh"
+                       sh "ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ubuntu@${EC2_INSTANCE_IP} 'bash -s' < deploy_script.sh"
+
                     }
                 }
             }
