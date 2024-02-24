@@ -12,7 +12,17 @@ try {
     // Set the PDO error mode to exception
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Read data from the database
+    // Create 'users' table if not exists
+    $createTableQuery = "
+        CREATE TABLE IF NOT EXISTS users (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL
+        )
+    ";
+    $pdo->exec($createTableQuery);
+
+    // Read data from the 'users' table
     $selectQuery = 'SELECT * FROM users';
     $result = $pdo->query($selectQuery);
 
@@ -24,7 +34,7 @@ try {
     }
     echo '</ul>';
 
-    // Insert data into the database
+    // Insert data into the 'users' table
     $insertQuery = "INSERT INTO users (name, email) VALUES ('John Doe', 'john.doe@example.com')";
     $pdo->exec($insertQuery);
     echo '<p>New record created successfully.</p>';
