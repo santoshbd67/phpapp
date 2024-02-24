@@ -9,8 +9,7 @@ pipeline {
         JENKINS_CREDENTIALS_ID ="ssh_cred"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         EC2_INSTANCE_IP = '54.152.22.213'  // Replace with your EC2 instance's IP or DNS
-        DEPLOY_SCRIPT = "deploy_script.sh"
-           
+        DEPLOY_SCRIPT = "deploy_script.sh"   
     }
 
     stages {
