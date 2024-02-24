@@ -1,15 +1,21 @@
 pipeline {
     agent any
     environment {
-        AWS_ACCOUNT_ID = "159012065560"
-        AWS_DEFAULT_REGION = "us-east-1"
-        IMAGE_REPO_NAME = "phpapplication"
-        IMAGE_TAG = "latest"
-        AWS_CREDENTIALS_ID = "aws_id"
-        JENKINS_CREDENTIALS_ID = "ssh_cred"
+        AWS_ACCOUNT_ID="159012065560"
+        AWS_DEFAULT_REGION="us-east-1"
+        IMAGE_REPO_NAME="phpapplication"
+        IMAGE_TAG="latest"
+        AWS_CREDENTIALS_ID ="aws_id"
+        JENKINS_CREDENTIALS_ID ="ssh_cred"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         EC2_INSTANCE_IP = '54.152.22.213'  // Replace with your EC2 instance's IP or DNS
-        
+        DEPLOY_SCRIPT = '''
+            #!/bin/bash
+            sudo docker pull ${REPOSITORY_URI}:${IMAGE_TAG}
+            sudo docker stop ${IMAGE_REPO_NAME} || true
+            sudo docker rm ${IMAGE_REPO_NAME} || true
+            sudo docker run -d -p 80:80 --name ${IMAGE_REPO_NAME} ${REPOSITORY_URI}:${IMAGE_TAG}
+        '''
     }
 
     stages {
@@ -45,15 +51,19 @@ pipeline {
         }
 
   stage('Deploying to EC2') {
-    steps {
-        script {
-            withCredentials([sshUserPrivateKey(credentialsId: JENKINS_CREDENTIALS_ID, keyFileVariable: 'SSH_KEY')]) {
-                sh "scp -o StrictHostKeyChecking=no -i ${SSH_KEY} deploy_script.sh ubuntu@${EC2_INSTANCE_IP}:~/"
-                sh "ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ubuntu@${EC2_INSTANCE_IP} 'bash -s' < ~/deploy_script.sh"
+            steps {
+                script {
+                    withCredentials([sshUserPrivateKey(credentialsId: JENKINS_CREDENTIALS_ID, keyFileVariable: 'SSH_KEY')]) {
+                        // Copy the deploy script to the remote server
+                        sh "echo '''${DEPLOY_SCRIPT}''' > deploy_script.sh"
+                        sh "scp -o StrictHostKeyChecking=no -i ${SSH_KEY} deploy_script.sh ubuntu@${EC2_INSTANCE_IP}:~/"
+
+                        // Execute the deploy script on the remote server
+                        sh "ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ubuntu@${EC2_INSTANCE_IP} 'bash -s' < ~/deploy_script.sh"
+                    }
+                }
             }
         }
-    }
-}
 
     }
 }
