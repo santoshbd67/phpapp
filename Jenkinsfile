@@ -1,13 +1,7 @@
 pipeline {
     agent any
-    environment {
-        AWS_DEFAULT_REGION = "us-east-1" 
-        IMAGE_REPO_NAME = "phpappapplication"
-        IMAGE_TAG = "latest"
-         REPOSITORY_URI = "public.ecr.aws/r7u8p7a8/${IMAGE_REPO_NAME}"
-    }
-    
-    stages {
+ 
+        stages {
         stage('Cloning Git') {
             steps {
                 git branch: 'main', url: 'https://github.com/santoshbd67/phpapp.git' 
@@ -18,20 +12,10 @@ pipeline {
         stage('Building image') {
             steps {
                 script {
-                    dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
-                }
-            }
-        }
-
-        // Pushing Docker images to AWS ECR
-        stage('Push to ECR') {
-            steps {
-                script {
-                    // Tag the Docker image
-                    sh "docker tag phpappapplication:latest public.ecr.aws/r7u8p7a8/phpappapplication:latest"
-
-                    // Push the Docker image to ECR
-                    sh "docker push public.ecr.aws/r7u8p7a8/phpappapplication:latest"
+                        sh "aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/r7u8p7a8"
+                        sh "docker build -t phpappapplication ."
+                        sh "docker tag phpappapplication:latest public.ecr.aws/r7u8p7a8/phpappapplication:latest"
+                        sh "docker push public.ecr.aws/r7u8p7a8/phpappapplication:latest"
                 }
             }
         }
