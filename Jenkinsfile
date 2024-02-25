@@ -4,7 +4,7 @@ pipeline {
         AWS_DEFAULT_REGION = "us-east-1" 
         IMAGE_REPO_NAME = "phpappapplication"
         IMAGE_TAG = "latest"
-         REPOSITORY_URI = "public.ecr.aws/r8p0n0e8/${IMAGE_REPO_NAME}"
+         REPOSITORY_URI = "public.ecr.aws/r7u8p7a8/${IMAGE_REPO_NAME}"
     }
     
     stages {
