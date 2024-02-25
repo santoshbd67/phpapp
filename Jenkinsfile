@@ -1,12 +1,10 @@
 pipeline {
     agent any
     environment {
-        AWS_DEFAULT_REGION="us-east-1" 
-        IMAGE_REPO_NAME="phpappapplication"
-        IMAGE_TAG="latest"
-        REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
-        AWS_ACCESS_KEY_ID     = credentials('accesskey')
-        AWS_SECRET_ACCESS_KEY = credentials('secreykey')
+        AWS_DEFAULT_REGION = "us-east-1" 
+        IMAGE_REPO_NAME = "phpappapplication"
+        IMAGE_TAG = "latest"
+         REPOSITORY_URI = "public.ecr.aws/r8p0n0e8/${IMAGE_REPO_NAME}"
     }
     
     stages {
@@ -25,24 +23,15 @@ pipeline {
             }
         }
 
-        // Uploading Docker images into AWS ECR
+        // Pushing Docker images to AWS ECR
         stage('Push to ECR') {
             steps {
                 script {
-                    // Build Docker image locally
-                    def dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
-
-                    // Debug statement
-                    echo "Docker image built: ${dockerImage}"
-
                     // Tag the Docker image
-                    sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} public.ecr.aws/r8p0n0e8/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
-
-                    // Debug statement
-                    sh "docker images" // Check images after tagging
+                    sh "docker tag ${dockerImage.id} ${REPOSITORY_URI}:${IMAGE_TAG}"
 
                     // Push the Docker image to ECR
-                    sh "docker push public.ecr.aws/r8p0n0e8/phpappapplication:latest"
+                    sh "docker push ${REPOSITORY_URI}:${IMAGE_TAG}"
                 }
             }
         }
