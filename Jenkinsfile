@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         AWS_DEFAULT_REGION="us-east-1" 
-        IMAGE_REPO_NAME="phpapppubapp"
+        IMAGE_REPO_NAME="phpappapplication"
         IMAGE_TAG="latest"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         AWS_ACCESS_KEY_ID     = credentials('accesskey')
@@ -36,13 +36,13 @@ pipeline {
                     echo "Docker image built: ${dockerImage}"
 
                     // Tag the Docker image
-                    sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} public.ecr.aws/b1u8y4d2/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+                    sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} public.ecr.aws/r8p0n0e8/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
 
                     // Debug statement
                     sh "docker images" // Check images after tagging
 
                     // Push the Docker image to ECR
-                    sh "docker push public.ecr.aws/b1u8y4d2/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+                    sh "docker push public.ecr.aws/r8p0n0e8/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
                 }
             }
         }
