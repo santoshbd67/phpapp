@@ -42,7 +42,7 @@ pipeline {
                     sh "docker images" // Check images after tagging
 
                     // Push the Docker image to ECR
-                    sh "docker push public.ecr.aws/r8p0n0e8/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+                    sh "docker push public.ecr.aws/r8p0n0e8/phpappapplication:latest"
                 }
             }
         }
