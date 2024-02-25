@@ -28,10 +28,10 @@ pipeline {
             steps {
                 script {
                     // Tag the Docker image
-                    sh "docker tag ${dockerImage.id} ${REPOSITORY_URI}:${IMAGE_TAG}"
+                    sh "docker tag phpappapplication:latest public.ecr.aws/r7u8p7a8/phpappapplication:latest"
 
                     // Push the Docker image to ECR
-                    sh "docker push ${REPOSITORY_URI}:${IMAGE_TAG}"
+                    sh "docker push public.ecr.aws/r7u8p7a8/phpappapplication:latest"
                 }
             }
         }
